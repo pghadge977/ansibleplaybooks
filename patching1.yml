@@ -1,0 +1,37 @@
+---
+- name: patching1.yml
+  hosts: all
+  remote_user: kk
+  become: true
+  tasks:
+  – name: update to latest kernel
+    yum:
+      name: '*'
+    state: latest
+    when: ansible_os_family == “RedHat”
+    
+  – name: update to latest suse kernel
+    zypper:
+      name: '*'
+    state: latest
+    when: ansible_os_family == “Suse”
+    
+  – name: reboot the systems
+    shell: “sleep 5 && reboot”
+      async: 10
+    poll: 0
+
+  – name: wait for 10 seconds
+    pause:
+      seconds: 10
+
+  – name: wait for system to reboot
+    wait_for_connection:
+      connect_timeout: 30
+    sleep: 5
+    delay: 5
+    timeout: 900
+
+  – name: systems uptime and kernel level
+    debug:
+      msg: “System {{ inventory_hostname }} is up with {{ ansible_uptime_seconds }} seconds with the latest kernel as {{ ansible_kernel }}”
